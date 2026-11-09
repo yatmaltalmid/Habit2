@@ -1,12 +1,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Loop Habit Tracker</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -64,19 +62,8 @@
             </div>
         </header>
 
-        <!-- טבלת ימים שהוספת -->
-        <div class="px-4 py-2 bg-darkCard/50 border-b border-darkBorder flex justify-between items-center text-xs text-darkSubtext sticky top-[53px] z-10 backdrop-blur-md">
-            <div class="font-medium text-center flex-1">ראשון</div>
-            <div class="font-medium text-center flex-1">שני</div>
-            <div class="font-medium text-center flex-1">שלישי</div>
-            <div class="font-medium text-center flex-1">רביעי</div>
-            <div class="font-medium text-center flex-1">חמישי</div>
-            <div class="font-medium text-center flex-1">שישי</div>
-            <div class="font-medium text-center flex-1">שבת</div>
-        </div>
-
         <!-- Date Column Headers -->
-        <div class="flex items-center px-4 py-2 bg-darkCard/80 border-b border-darkBorder text-xs text-darkSubtext sticky top-[93px] z-10 backdrop-blur-md">
+        <div class="flex items-center px-4 py-2 bg-darkCard/80 border-b border-darkBorder text-xs text-darkSubtext sticky top-[53px] z-10 backdrop-blur-md">
             <div class="flex-1 font-medium">שם ההרגל</div>
             <div class="flex gap-2 text-center" id="dateHeaders">
                 <!-- JavaScript will populate 5 days here -->
@@ -168,6 +155,7 @@
     </div>
 
     <!-- App Logic -->
+<!-- App Logic -->
     <script>
         let habits = [];
         let selectedColor = "#6366f1";
@@ -254,7 +242,7 @@
             container.innerHTML = habits.map(habit => {
                 const checkBubbles = dates.map(d => {
                     const dateStr = formatDate(d);
-                    const status = habit.history[dateStr] || 'none';
+                    const status = habit.history[dateStr] || 'none'; // 'done', 'skipped', 'failed', or 'none'
                     
                     let bgStyle = 'transparent';
                     let borderStyle = '#333';
@@ -265,11 +253,11 @@
                         borderStyle = habit.color;
                         icon = '<i class="fa-solid fa-check text-white text-xs"></i>';
                     } else if (status === 'skipped') {
-                        bgStyle = 'rgba(245, 158, 11, 0.2)';
+                        bgStyle = 'rgba(245, 158, 11, 0.2)'; // amber/orange tint
                         borderStyle = '#f59e0b';
                         icon = '<i class="fa-solid fa-minus text-amber-500 text-xs"></i>';
                     } else if (status === 'failed') {
-                        bgStyle = 'rgba(239, 68, 68, 0.2)';
+                        bgStyle = 'rgba(239, 68, 68, 0.2)'; // red tint
                         borderStyle = '#ef4444';
                         icon = '<i class="fa-solid fa-xmark text-red-500 text-xs"></i>';
                     }
@@ -303,6 +291,7 @@
             if (habit) {
                 const currentStatus = habit.history[dateStr] || 'none';
                 
+                // Compatibility layer for old boolean values
                 let nextStatus = 'done';
                 if (currentStatus === true || currentStatus === 'done') nextStatus = 'skipped';
                 else if (currentStatus === 'skipped') nextStatus = 'failed';
