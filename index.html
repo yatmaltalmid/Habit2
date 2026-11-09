@@ -1,3 +1,5 @@
+<meta name="apple-mobile-web-app-capable" content="yes">
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -153,7 +155,7 @@
         </div>
     </div>
 
-    <!-- App Logic -->
+   <!-- App Logic -->
     <script>
         let habits = [];
         let selectedColor = "#6366f1";
@@ -225,7 +227,7 @@
             `).join('');
         }
 
-        // Render Habits List
+        // Render Habits List with 3-State Cycle (Done, Skipped, Failed, Empty)
         function renderHabits() {
             const container = document.getElementById('habitsList');
             const emptyState = document.getElementById('emptyState');
@@ -240,13 +242,31 @@
             container.innerHTML = habits.map(habit => {
                 const checkBubbles = dates.map(d => {
                     const dateStr = formatDate(d);
-                    const isChecked = !!habit.history[dateStr];
+                    const status = habit.history[dateStr] || 'none'; // 'done', 'skipped', 'failed', or 'none'
+                    
+                    let bgStyle = 'transparent';
+                    let borderStyle = '#333';
+                    let icon = '';
+
+                    if (status === 'done') {
+                        bgStyle = habit.color;
+                        borderStyle = habit.color;
+                        icon = '<i class="fa-solid fa-check text-white text-xs"></i>';
+                    } else if (status === 'skipped') {
+                        bgStyle = 'rgba(245, 158, 11, 0.2)'; // amber/orange tint
+                        borderStyle = '#f59e0b';
+                        icon = '<i class="fa-solid fa-minus text-amber-500 text-xs"></i>';
+                    } else if (status === 'failed') {
+                        bgStyle = 'rgba(239, 68, 68, 0.2)'; // red tint
+                        borderStyle = '#ef4444';
+                        icon = '<i class="fa-solid fa-xmark text-red-500 text-xs"></i>';
+                    }
                     
                     return `
                         <button onclick="toggleHabit('${habit.id}', '${dateStr}')" 
                                 class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
-                                style="background-color: ${isChecked ? habit.color : 'transparent'}; border: 2px solid ${isChecked ? habit.color : '#333'}">
-                            ${isChecked ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
+                                style="background-color: ${bgStyle}; border: 2px solid ${borderStyle}">
+                            ${icon}
                         </button>
                     `;
                 }).join('');
@@ -265,15 +285,25 @@
             }).join('');
         }
 
-        // Toggle Habit State
+        // Cycle through status: none -> done (וי) -> skipped (מינוס) -> failed (איקס) -> none
         function toggleHabit(habitId, dateStr) {
             const habit = habits.find(h => h.id == habitId);
             if (habit) {
-                if (habit.history[dateStr]) {
+                const currentStatus = habit.history[dateStr] || 'none';
+                
+                // Compatibility layer for old boolean values
+                let nextStatus = 'done';
+                if (currentStatus === true || currentStatus === 'done') nextStatus = 'skipped';
+                else if (currentStatus === 'skipped') nextStatus = 'failed';
+                else if (currentStatus === 'failed') nextStatus = 'none';
+                else nextStatus = 'done';
+
+                if (nextStatus === 'none') {
                     delete habit.history[dateStr];
                 } else {
-                    habit.history[dateStr] = true;
+                    habit.history[dateStr] = nextStatus;
                 }
+                
                 saveData();
                 renderHabits();
             }
@@ -350,14 +380,13 @@
             closeStatsModal();
         }
 
-        // Calculations (Streaks & Completion Rate)
+        // Calculations (Streaks & Completion Rate considering skipped/failed)
         function calculateStats(habit) {
             const history = habit.history || {};
             let currentStreak = 0;
             let bestStreak = 0;
             let tempStreak = 0;
 
-            // Check history for the last 30 days
             const today = new Date();
             let totalChecked = 0;
 
@@ -365,8 +394,9 @@
                 const d = new Date();
                 d.setDate(today.getDate() - i);
                 const dateStr = formatDate(d);
+                const status = history[dateStr];
 
-                if (history[dateStr]) {
+                if (status === 'done' || status === true) {
                     totalChecked++;
                     tempStreak++;
                     if (i === 0 || currentStreak === i) {
@@ -375,6 +405,8 @@
                     if (tempStreak > bestStreak) {
                         bestStreak = tempStreak;
                     }
+                } else if (status === 'skipped') {
+                    // Skipped maintains streak without breaking it
                 } else {
                     tempStreak = 0;
                 }
